@@ -1,2 +1,3 @@
-# cb-milkyway
-An agent for CB-Tumblebug to benchmark IaaS specs from multiple CSPs
+# CB-Milkyway (CB-Tumblebug Benchmark Agent)
+
+TDB
