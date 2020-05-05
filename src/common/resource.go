@@ -17,6 +17,84 @@ type benchInfo struct {
 	Elapsed string `json:"elapsed"`
 }
 
+func RestGetInit(c echo.Context) error {
+
+
+	content := benchInfo{}
+
+	start := time.Now()
+
+	fmt.Println("===============================================")
+
+	// Init fileio
+	cmdStr := "sysbench fileio --file-total-size=50M prepare"
+	result, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Init fileio"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	// Init DB
+	cmdStr = "sysbench /usr/share/sysbench/oltp_common.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak prepare"
+	result2, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Init DB"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+	
+	elapsed := time.Since(start)
+	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+
+	result += result2
+
+	content.Result = result
+	content.Elapsed = elapsedStr 
+
+	PrintJsonPretty(content)
+	fmt.Println("===============================================")
+
+	return c.JSON(http.StatusOK, &content)
+}
+
+func RestGetClean(c echo.Context) error {
+
+
+	content := benchInfo{}
+
+	start := time.Now()
+
+	fmt.Println("===============================================")
+
+	// Crean fileio
+	cmdStr := "sysbench fileio --file-total-size=50M cleanup"
+	result, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean fileio"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	// Crean DB
+	cmdStr = "sysbench /usr/share/sysbench/oltp_common.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak cleanup"
+	result2, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean DB"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+	
+	elapsed := time.Since(start)
+	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+
+	result += result2
+
+	content.Result = result
+	content.Elapsed = elapsedStr 
+
+	PrintJsonPretty(content)
+	fmt.Println("===============================================")
+
+	return c.JSON(http.StatusOK, &content)
+}
+
 func RestGetCPU(c echo.Context) error {
 
 

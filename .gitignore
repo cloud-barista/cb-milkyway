@@ -24,3 +24,6 @@ meta_db/
 
 # Config file for mcism
 conf/
+
+# Sysbench files
+test_file.*
