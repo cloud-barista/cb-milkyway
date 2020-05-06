@@ -22,11 +22,14 @@ CB-Tumblebug의 최적 멀티 클라우드 인프라 배치 기능을 위한, �
 ```
 
 ### 바이너리로 실행
+```Shell
 wget https://github.com/cloud-barista/cb-milkyway/raw/master/src/milkyway && sudo chmod 755 ~/milkyway && ~/milkyway
+```
 
 ## 실행 예시 
 
-- milkyway 실행시 1324 포트에서 API 서버가 실행됨.
+- milkyway 실행
+  - 1324 포트에서 API 서버가 실행됨
 
 ```Shell
 # ~/go/src/github.com/cloud-barista/cb-milkyway/src$ go build -o milkyway && ./milkyway 
