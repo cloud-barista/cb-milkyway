@@ -4,6 +4,7 @@
 echo "[CB-Milkyway: Start to prepare a VM evaluation]"
 
 echo "[CB-Milkyway: Install sysbench]"
+sudo apt-get -y update
 sudo apt-get -y install sysbench
 
 echo "[CB-Milkyway: Install debconf-utils]"

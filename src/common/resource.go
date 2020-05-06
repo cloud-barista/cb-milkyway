@@ -26,7 +26,7 @@ func RestGetInstall(c echo.Context) error {
 
 	fmt.Println("===============================================")
 
-	// Init fileio
+	// wget install script from github install.sh
 	cmdStr := "wget https://github.com/cloud-barista/cb-milkyway/raw/master/src/script/install.sh -P ~/script/"
 	result, err := SysCall(cmdStr)
 	if(err != nil){
@@ -34,9 +34,17 @@ func RestGetInstall(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
-	// Init DB
+	// change chmod
 	cmdStr = "sudo chmod 755 ~/script/install.sh"
 	result2, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in installation: chmod " + err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	// run script
+	cmdStr = "~/script/install.sh"
+	result3, err := SysCall(cmdStr)
 	if(err != nil){
 		mapA := map[string]string{"message": "Error in installation: chmod " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
@@ -46,6 +54,7 @@ func RestGetInstall(c echo.Context) error {
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 
 	result += result2
+	result += result3
 
 	content.Result = result
 	content.Elapsed = elapsedStr 
