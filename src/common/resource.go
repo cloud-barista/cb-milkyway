@@ -14,6 +14,8 @@ import (
 
 type benchInfo struct {
 	Result string `json:"result"`
+	Unit string `json:"unit"`
+	Desc string `json:"desc"`
 	Elapsed string `json:"elapsed"`
 }
 
@@ -56,6 +58,8 @@ func RestGetInstall(c echo.Context) error {
 	result += result2
 	result += result3
 
+	result = "The installation is complete"
+
 	content.Result = result
 	content.Elapsed = elapsedStr 
 
@@ -80,27 +84,51 @@ func RestGetInit(c echo.Context) error {
 
 	// Init fileio
 	cmdStr := "sysbench fileio --file-total-size=50M prepare"
-	result, err := SysCall(cmdStr)
+	outputStr, err := SysCall(cmdStr)
 	if(err != nil){
 		mapA := map[string]string{"message": "Error in excuting the benchmark: Init fileio " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
+	var grepStr = regexp.MustCompile(`([0-9]+) files, ([0-9]+)([a-zA-Z]+) each, ([0-9]+)([a-zA-Z]+) total`)
+	parseStr := grepStr.FindStringSubmatch(outputStr)	
+	if len(parseStr) > 0 {
+		parseStr1 := strings.TrimSpace(parseStr[0])
+		fmt.Printf("File creation result: %s\n", parseStr1)
+
+		outputStr = parseStr1
+	}
+
 	// Init DB
 	cmdStr = "sysbench /usr/share/sysbench/oltp_read_write.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak prepare"
-	result2, err := SysCall(cmdStr)
+	outputStr2, err := SysCall(cmdStr)
 	if(err != nil){
 		mapA := map[string]string{"message": "Error in excuting the benchmark: Init DB " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	grepStr = regexp.MustCompile(` ([0-9]+) records into .([a-zA-Z]+).`)
+	parseStr = grepStr.FindStringSubmatch(outputStr2)	
+	if len(parseStr) > 0 {
+		parseStr1 := strings.TrimSpace(parseStr[0])
+		fmt.Printf("Table creation result: %s\n", parseStr1)
+
+		outputStr2 = parseStr1
 	}
 	
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 
-	result += result2
+	outputStr += ", "
+	outputStr += outputStr2
 
-	content.Result = result
+
+	//result = "The init is complete: "
+
+	content.Result = "The init is complete"
 	content.Elapsed = elapsedStr 
+
+	content.Desc = outputStr + " are created"
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
@@ -121,19 +149,19 @@ func RestGetClean(c echo.Context) error {
 
 	fmt.Println("===============================================")
 
-	// Crean fileio
+	// Clean fileio
 	cmdStr := "sysbench fileio --file-total-size=50M cleanup"
 	result, err := SysCall(cmdStr)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean fileio " + err.Error()}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Clean fileio " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
-	// Crean DB
+	// Clean DB
 	cmdStr = "sysbench /usr/share/sysbench/oltp_read_write.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak cleanup"
 	result2, err := SysCall(cmdStr)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean DB "  + err.Error()}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Clean DB "  + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 	
@@ -142,8 +170,12 @@ func RestGetClean(c echo.Context) error {
 
 	result += result2
 
+	result = "The cleaning is complete"
+
 	content.Result = result
 	content.Elapsed = elapsedStr 
+
+	content.Desc = "The benchmark files and tables are removed"
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
@@ -186,6 +218,9 @@ func RestGetCPU(c echo.Context) error {
 	content.Result = result
 	content.Elapsed = elapsedStr 
 
+	content.Desc = "Verify prime numbers in 10000 (standard division of each number by all numbers between 2 and the square root of the number)"
+	content.Unit = "sec"
+
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
 
@@ -215,7 +250,7 @@ func RestGetMEMR(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
-	var grepStr = regexp.MustCompile(`execution time \(avg/stddev\):(\s+[+-]?([0-9]*[.])?[0-9]+)/`)
+	var grepStr = regexp.MustCompile(` transferred .([+-]?([0-9]*[.])?[0-9]+) `)
 	parseStr := grepStr.FindStringSubmatch(result)	
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
@@ -226,6 +261,9 @@ func RestGetMEMR(c echo.Context) error {
 	
 	content.Result = result
 	content.Elapsed = elapsedStr 
+
+	content.Desc = "Allocate 10G memory buffer and read (repeat reading a pointer)"
+	content.Unit = "MiB/sec"
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
@@ -256,7 +294,7 @@ func RestGetMEMW(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
-	var grepStr = regexp.MustCompile(`execution time \(avg/stddev\):(\s+[+-]?([0-9]*[.])?[0-9]+)/`)
+	var grepStr = regexp.MustCompile(` transferred .([+-]?([0-9]*[.])?[0-9]+) `)
 	parseStr := grepStr.FindStringSubmatch(result)	
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
@@ -267,6 +305,9 @@ func RestGetMEMW(c echo.Context) error {
 	
 	content.Result = result
 	content.Elapsed = elapsedStr 
+
+	content.Desc = "Allocate 10G memory buffer and write (repeat writing a pointer)"
+	content.Unit = "MiB/sec"
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
@@ -309,6 +350,9 @@ func RestGetFIOR(c echo.Context) error {
 	content.Result = result
 	content.Elapsed = elapsedStr 
 
+	content.Desc = "Check read throughput by excuting random reads for files in 50MiB for 30s"
+	content.Unit = "MiB/sec"
+
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
 
@@ -349,6 +393,9 @@ func RestGetFIOW(c echo.Context) error {
 	
 	content.Result = result
 	content.Elapsed = elapsedStr 
+
+	content.Desc = "Check write throughput by excuting random writes for files in 50MiB for 30s"
+	content.Unit = "MiB/sec"
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
@@ -392,6 +439,9 @@ func RestGetDBR(c echo.Context) error {
 	content.Result = result
 	content.Elapsed = elapsedStr 
 
+	content.Desc = "Read transactions by simulating transaction loads (OLTP) in DB for 100000 records"
+	content.Unit = "Transactions/s"
+
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
 
@@ -426,13 +476,16 @@ func RestGetDBW(c echo.Context) error {
 	if len(parseStr) > 0 {
 		
 		parseStr1 := strings.Split(parseStr[1], "(")
-		fmt.Printf("DB Read Transactions/s: %s\n", parseStr1[1])
+		fmt.Printf("DB Write Transactions/s: %s\n", parseStr1[1])
 
 		result = parseStr1[1]
 	}
 	
 	content.Result = result
 	content.Elapsed = elapsedStr 
+
+	content.Desc = "Write transactions by simulating transaction loads (OLTP) in DB for 100000 records"
+	content.Unit = "Transactions/s"
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
