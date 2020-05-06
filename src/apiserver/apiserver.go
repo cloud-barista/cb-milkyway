@@ -109,6 +109,10 @@ func ApiServer() {
 	g.GET("/fioW", common.RestGetFIOW)
 	g.GET("/dbR", common.RestGetDBR)
 	g.GET("/dbW", common.RestGetDBW)
+
+	g.GET("/rtt", common.RestGetRTT)
+	g.GET("/mrtt", common.RestGetMultiRTT)
+	
 	//g.PUT("/:nsId", common.RestPutNs)
 	//g.DELETE("/:nsId", common.RestDelNs)
 	//g.DELETE("", common.RestDelAllNs)

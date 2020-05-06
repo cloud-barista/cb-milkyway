@@ -16,6 +16,12 @@ function full_test() {
 	curl -sX GET http://${HOST}:1324/milkyway/init | json_pp || return 1
 	echo "#-----------------------------"
 
+	curl -sX GET http://${HOST}:1324/milkyway/rtt -H 'Content-Type: application/json' -d '{ "host": "localhost"}' |json_pp || return 1
+	echo "#-----------------------------"
+
+	curl -sX GET http://${HOST}:1324/milkyway/mrtt -H 'Content-Type: application/json' -d '{ "multihost": [{"host":"localhost"},{"host":"localhost"}]}' |json_pp || return 1
+	echo "#-----------------------------"
+
 	curl -sX GET http://${HOST}:1324/milkyway/cpu | json_pp || return 1
 	echo "#-----------------------------"
 	curl -sX GET http://${HOST}:1324/milkyway/memR | json_pp || return 1

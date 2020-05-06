@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"github.com/labstack/echo"
 	"regexp"
+	//for ping
+	//"github.com/sparrc/go-ping"
 	
 )
 
@@ -18,6 +20,19 @@ type benchInfo struct {
 	Desc string `json:"desc"`
 	Elapsed string `json:"elapsed"`
 }
+
+type multiInfo struct {
+	ResultArray []benchInfo `json:"resultarray"`
+}
+
+type request struct {
+	Host string `json:"host"`
+}
+
+type mRequest struct {
+	Multihost []request `json:"multihost"`
+}
+
 
 func RestGetInstall(c echo.Context) error {
 
@@ -491,6 +506,114 @@ func RestGetDBW(c echo.Context) error {
 	fmt.Println("===============================================")
 
 	return c.JSON(http.StatusOK, &content)
+}
+
+
+func RestGetRTT(c echo.Context) error {
+
+	content := benchInfo{}
+
+	req := request{}
+
+	start := time.Now()
+
+	fmt.Println("===============================================")
+
+	if err := c.Bind(&req); err != nil {
+		mapA := map[string]string{"message": "Error in request binding " + err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	pingHost := req.Host
+	
+	// system call for ping
+	cmdStr := "ping -c 10 " + pingHost
+	outputStr, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Ping " + err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	var grepStr = regexp.MustCompile(`(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)`)
+	parseStr := grepStr.FindAllStringSubmatch(outputStr, -1)
+	if len(parseStr) > 0 {
+		vals := parseStr[0]
+		fmt.Printf("Ping result: %s\n", vals[1])
+
+		outputStr = vals[2]
+	}
+
+	
+	elapsed := time.Since(start)
+	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+
+	
+	content.Result = outputStr
+	content.Elapsed = elapsedStr 
+	content.Desc = "Average RTT to " + pingHost
+	content.Unit = "ms"
+
+	PrintJsonPretty(content)
+	fmt.Println("===============================================")
+
+	return c.JSON(http.StatusOK, &content)
+}
+
+func RestGetMultiRTT(c echo.Context) error {
+
+	//content := benchInfo{}
+	contentArray := multiInfo{}
+
+	mReq := mRequest{}
+
+	start := time.Now()
+
+	fmt.Println("===============================================")
+
+	if err := c.Bind(&mReq); err != nil {
+		mapA := map[string]string{"message": "Error in request binding " + err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	hostList := mReq.Multihost
+	for _, v := range hostList {
+		content := benchInfo{}
+
+		pingHost := v.Host
+		// system call for ping
+		cmdStr := "ping -c 10 " + pingHost
+		outputStr, err := SysCall(cmdStr)
+		if(err != nil){
+			mapA := map[string]string{"message": "Error in excuting the benchmark: Ping " + err.Error()}
+			return c.JSON(http.StatusNotFound, &mapA)
+		}
+	
+		var grepStr = regexp.MustCompile(`(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)`)
+		parseStr := grepStr.FindAllStringSubmatch(outputStr, -1)
+		if len(parseStr) > 0 {
+			vals := parseStr[0]
+			fmt.Printf("Ping result: %s\n", vals[1])
+	
+			outputStr = vals[2]
+		}
+
+		elapsed := time.Since(start)
+		elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+
+		content.Result = outputStr
+		content.Elapsed = elapsedStr 
+		content.Desc = "Average RTT to " + pingHost
+		content.Unit = "ms"
+
+		contentArray.ResultArray = append(contentArray.ResultArray, content)
+	
+	}
+
+
+	PrintJsonPretty(contentArray)
+	fmt.Println("===============================================")
+
+	return c.JSON(http.StatusOK, &contentArray)
 }
 
 func checkInit() error {
