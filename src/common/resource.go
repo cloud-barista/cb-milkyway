@@ -58,6 +58,10 @@ func RestGetInstall(c echo.Context) error {
 
 func RestGetInit(c echo.Context) error {
 
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
 
 	content := benchInfo{}
 
@@ -97,6 +101,10 @@ func RestGetInit(c echo.Context) error {
 
 func RestGetClean(c echo.Context) error {
 
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
 
 	content := benchInfo{}
 
@@ -136,6 +144,10 @@ func RestGetClean(c echo.Context) error {
 
 func RestGetCPU(c echo.Context) error {
 
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
 
 	content := benchInfo{}
 
@@ -173,6 +185,11 @@ func RestGetCPU(c echo.Context) error {
 
 func RestGetMEMR(c echo.Context) error {
 
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
 	content := benchInfo{}
 
 	start := time.Now()
@@ -208,6 +225,11 @@ func RestGetMEMR(c echo.Context) error {
 }
 
 func RestGetMEMW(c echo.Context) error {
+
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
 
 	content := benchInfo{}
 
@@ -245,6 +267,11 @@ func RestGetMEMW(c echo.Context) error {
 
 func RestGetFIOR(c echo.Context) error {
 
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
 	content := benchInfo{}
 
 	start := time.Now()
@@ -280,6 +307,11 @@ func RestGetFIOR(c echo.Context) error {
 }
 
 func RestGetFIOW(c echo.Context) error {
+
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
 
 	content := benchInfo{}
 
@@ -317,6 +349,11 @@ func RestGetFIOW(c echo.Context) error {
 
 func RestGetDBR(c echo.Context) error {
 
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
 	content := benchInfo{}
 
 	start := time.Now()
@@ -352,55 +389,30 @@ func RestGetDBR(c echo.Context) error {
 	return c.JSON(http.StatusOK, &content)
 }
 
-func RestGetDBW(c echo.Context) error {
-
-	content := benchInfo{}
-
-	start := time.Now()
-
-	fmt.Println("===============================================")
-
-	cmdStr := "sysbench /usr/share/sysbench/oltp_write_only.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak run"
-	result, err := SysCall(cmdStr)
-
-	elapsed := time.Since(start)
-	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+func checkInit() error {
+	checkPath, err := SysLookPath("sysbench")
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark"}
-		return c.JSON(http.StatusNotFound, &mapA)
+		return err
 	}
-
-	var grepStr = regexp.MustCompile(`transactions:(\s+([0-9]*)(\s+)\([+-]?([0-9]*[.])?[0-9]+)`)
-	parseStr := grepStr.FindStringSubmatch(result)	
-	if len(parseStr) > 0 {
-		
-		parseStr1 := strings.Split(parseStr[1], "(")
-		fmt.Printf("DB Write Transactions/s: %s\n", parseStr1[1])
-
-		result = parseStr1[1]
-	}
-	
-	content.Result = result
-	content.Elapsed = elapsedStr 
-
-	PrintJsonPretty(content)
-	fmt.Println("===============================================")
-
-
-	return c.JSON(http.StatusOK, &content)
+	fmt.Printf("checkPath: %s\n", checkPath)
+	return nil
 }
+
+
 
 func ApiValidation() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			fmt.Printf("%v\n", "[API request!]")
 
+			/*
 			checkPath, err := SysLookPath("sysbench")
 			mapA := map[string]string{"message": "Error in excuting the benchmark: no sysbench"}	
 			if(err != nil){
 				return echo.NewHTTPError(http.StatusNotFound, &mapA)
 			}
 			fmt.Printf("checkPath: %s\n", checkPath)
+			*/
 
 			return next(c)
 		}
