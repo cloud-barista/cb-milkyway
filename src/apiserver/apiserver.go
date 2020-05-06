@@ -98,6 +98,7 @@ func ApiServer() {
 	//g.POST("", common.RestPostNs)
 	//g.GET("/:nsId", common.RestGetNs)
 
+	g.GET("/install", common.RestGetInstall)
 	g.GET("/init", common.RestGetInit)
 	g.GET("/clean", common.RestGetClean)
 

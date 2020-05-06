@@ -4,6 +4,13 @@ HOST=${1-"localhost"}
 
 function full_test() {
 
+	if ( $2 == "install" )
+	then
+		echo "[Call Install]"
+		curl -sX GET http://${HOST}:1324/milkyway/install | json_pp || return 1
+		echo "#-----------------------------"
+	fi
+
 	echo "####################################################################"
 
 	curl -sX GET http://${HOST}:1324/milkyway/init | json_pp || return 1

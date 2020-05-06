@@ -17,6 +17,45 @@ type benchInfo struct {
 	Elapsed string `json:"elapsed"`
 }
 
+func RestGetInstall(c echo.Context) error {
+
+
+	content := benchInfo{}
+
+	start := time.Now()
+
+	fmt.Println("===============================================")
+
+	// Init fileio
+	cmdStr := "wget https://github.com/cloud-barista/cb-milkyway/raw/master/src/script/install.sh -P ~/script/"
+	result, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in installation: wget script " + err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	// Init DB
+	cmdStr = "sudo chmod 755 ~/script/install.sh"
+	result2, err := SysCall(cmdStr)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in installation: chmod " + err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+	
+	elapsed := time.Since(start)
+	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+
+	result += result2
+
+	content.Result = result
+	content.Elapsed = elapsedStr 
+
+	PrintJsonPretty(content)
+	fmt.Println("===============================================")
+
+	return c.JSON(http.StatusOK, &content)
+}
+
 func RestGetInit(c echo.Context) error {
 
 
@@ -30,15 +69,15 @@ func RestGetInit(c echo.Context) error {
 	cmdStr := "sysbench fileio --file-total-size=50M prepare"
 	result, err := SysCall(cmdStr)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark: Init fileio"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Init fileio " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	// Init DB
-	cmdStr = "sysbench /usr/share/sysbench/oltp_common.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak prepare"
+	cmdStr = "sysbench /usr/share/sysbench/oltp_read_write.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak prepare"
 	result2, err := SysCall(cmdStr)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark: Init DB"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Init DB " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 	
@@ -69,15 +108,15 @@ func RestGetClean(c echo.Context) error {
 	cmdStr := "sysbench fileio --file-total-size=50M cleanup"
 	result, err := SysCall(cmdStr)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean fileio"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean fileio " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	// Crean DB
-	cmdStr = "sysbench /usr/share/sysbench/oltp_common.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak cleanup"
+	cmdStr = "sysbench /usr/share/sysbench/oltp_read_write.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak cleanup"
 	result2, err := SysCall(cmdStr)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean DB"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Crean DB "  + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 	
