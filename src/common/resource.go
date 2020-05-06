@@ -161,7 +161,7 @@ func RestGetCPU(c echo.Context) error {
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: CPU"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
@@ -202,7 +202,7 @@ func RestGetMEMR(c echo.Context) error {
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: MEMR"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
@@ -243,7 +243,7 @@ func RestGetMEMW(c echo.Context) error {
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: MEMW"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
@@ -284,7 +284,7 @@ func RestGetFIOR(c echo.Context) error {
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: FIOR"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
@@ -325,7 +325,7 @@ func RestGetFIOW(c echo.Context) error {
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: FIOW"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
@@ -366,7 +366,49 @@ func RestGetDBR(c echo.Context) error {
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark"}
+		mapA := map[string]string{"message": "Error in excuting the benchmark: DBR"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	var grepStr = regexp.MustCompile(`transactions:(\s+([0-9]*)(\s+)\([+-]?([0-9]*[.])?[0-9]+)`)
+	parseStr := grepStr.FindStringSubmatch(result)	
+	if len(parseStr) > 0 {
+		
+		parseStr1 := strings.Split(parseStr[1], "(")
+		fmt.Printf("DB Read Transactions/s: %s\n", parseStr1[1])
+
+		result = parseStr1[1]
+	}
+	
+	content.Result = result
+	content.Elapsed = elapsedStr 
+
+	PrintJsonPretty(content)
+	fmt.Println("===============================================")
+
+	return c.JSON(http.StatusOK, &content)
+}
+
+func RestGetDBW(c echo.Context) error {
+
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	content := benchInfo{}
+
+	start := time.Now()
+
+	fmt.Println("===============================================")
+
+	cmdStr := "sysbench /usr/share/sysbench/oltp_write_only.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak run"
+	result, err := SysCall(cmdStr)
+
+	elapsed := time.Since(start)
+	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: DBW"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
