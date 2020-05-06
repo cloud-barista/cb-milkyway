@@ -15,11 +15,11 @@ CB-Tumblebug의 최적 멀티 클라우드 인프라 배치 기능을 위한, �
      - 벤치마킹 환경 정리 (test files 삭제, db table 및 records 삭제)
 
 ### 소스 코드로 실행
-git clone https://github.com/cloud-barista/cb-milkyway.git
-
-cd cb-milkyway/src/
-
-go run milkyway.go
+```Shell
+# git clone https://github.com/cloud-barista/cb-milkyway.git
+# cd cb-milkyway/src/
+# go run milkyway.go
+```
 
 ### 바이너리로 실행
 wget https://github.com/cloud-barista/cb-milkyway/raw/master/src/milkyway && sudo chmod 755 ~/milkyway && ~/milkyway
@@ -28,8 +28,8 @@ wget https://github.com/cloud-barista/cb-milkyway/raw/master/src/milkyway && sud
 
 - milkyway 실행시 1324 포트에서 API 서버가 실행됨.
 
-$ ~/go/src/github.com/cloud-barista/cb-milkyway/src$ go build -o milkyway && ./milkyway 
-
+```Shell
+# ~/go/src/github.com/cloud-barista/cb-milkyway/src$ go build -o milkyway && ./milkyway 
 
  ██████╗██████╗       ███╗   ███╗██╗██╗     ██╗  ██╗██╗   ██╗██╗    ██╗ █████╗ ██╗   ██╗
 ██╔════╝██╔══██╗      ████╗ ████║██║██║     ██║ ██╔╝╚██╗ ██╔╝██║    ██║██╔══██╗╚██╗ ██╔╝
@@ -44,13 +44,14 @@ $ ~/go/src/github.com/cloud-barista/cb-milkyway/src$ go build -o milkyway && ./m
  Repository: https://github.com/cloud-barista/cb-milkyway
 
 ⇨ http server started on [::]:1324
-
+```
 
 - 클라이언트 또는 에이전트 관리기(CB-Tumblebug)에서 API Call을 통해 벤치마크 시험.
   - cb-milkyway/test$ ./full_test.sh 를 통해 전체 시험 가능
   - ./full_test.sh {milkyway가 동작 중인 host address} {"install"을 입력하면 환경 세팅도 함께 진행}}
 
-son@son:~/go/src/github.com/cloud-barista/cb-milkyway/test$ ./full_test.sh localhost
+```Shell
+# ~/go/src/github.com/cloud-barista/cb-milkyway/test$ ./full_test.sh localhost
 ####################################################################
 {
    "result" : "The init is complete",
@@ -139,3 +140,4 @@ son@son:~/go/src/github.com/cloud-barista/cb-milkyway/test$ ./full_test.sh local
    "elapsed" : "0.067219"
 }
 #-----------------------------
+```
