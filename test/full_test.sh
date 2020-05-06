@@ -1,14 +1,17 @@
 #!/bin/bash
 
 HOST=${1-"localhost"}
+CMD=${2-""}
 
 function full_test() {
 
-	if [ ! -z "$2" ]
-	then
-		echo "[Call Install]"
-		curl -sX GET http://${HOST}:1324/milkyway/install | json_pp || return 1
-		echo "#-----------------------------"
+	if [ "${CMD}" == "install" ]
+		then
+			echo "[Call Install]"
+			curl -sX GET http://${HOST}:1324/milkyway/install | json_pp || return 1
+			echo "#-----------------------------"
+		else
+			echo "[Call without Install]"
 	fi
 
 	echo "####################################################################"
