@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"runtime"
 )
 
 
@@ -40,12 +41,13 @@ func SysLookPath(cmdStr string) (string, error) {
 	
 }
 
-// MCIS utilities
-
 func GenUuid() string {
 	return uuid.New().String()
 }
 
+func GetNumCPU() int {
+	return runtime.NumCPU()
+}
 
 
 func PrintJsonPretty(v interface{}) {

@@ -102,7 +102,8 @@ func ApiServer() {
 	g.GET("/init", common.RestGetInit)
 	g.GET("/clean", common.RestGetClean)
 
-	g.GET("/cpu", common.RestGetCPU)
+	g.GET("/cpus", common.RestGetCPUS)
+	g.GET("/cpum", common.RestGetCPUM)
 	g.GET("/memR", common.RestGetMEMR)
 	g.GET("/memW", common.RestGetMEMW)
 	g.GET("/fioR", common.RestGetFIOR)

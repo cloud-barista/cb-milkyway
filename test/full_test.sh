@@ -3,7 +3,7 @@
 HOST=${1-"localhost"}
 CMD=${2-""}
 
-function full_test() {
+
 
 	if [ "${CMD}" == "install" ]
 		then
@@ -19,13 +19,9 @@ function full_test() {
 	curl -sX GET http://${HOST}:1324/milkyway/init | json_pp || return 1
 	echo "#-----------------------------"
 
-	curl -sX GET http://${HOST}:1324/milkyway/rtt -H 'Content-Type: application/json' -d '{ "host": "localhost"}' |json_pp || return 1
+	curl -sX GET http://${HOST}:1324/milkyway/cpus | json_pp || return 1
 	echo "#-----------------------------"
-
-	curl -sX GET http://${HOST}:1324/milkyway/mrtt -H 'Content-Type: application/json' -d '{ "multihost": [{"host":"localhost"},{"host":"localhost"}]}' |json_pp || return 1
-	echo "#-----------------------------"
-
-	curl -sX GET http://${HOST}:1324/milkyway/cpu | json_pp || return 1
+	curl -sX GET http://${HOST}:1324/milkyway/cpum | json_pp || return 1
 	echo "#-----------------------------"
 	curl -sX GET http://${HOST}:1324/milkyway/memR | json_pp || return 1
 	echo "#-----------------------------"
@@ -40,9 +36,13 @@ function full_test() {
 	curl -sX GET http://${HOST}:1324/milkyway/dbW | json_pp || return 1
 	echo "#-----------------------------"
 
+	curl -sX GET http://${HOST}:1324/milkyway/rtt -H 'Content-Type: application/json' -d '{ "host": "localhost"}' |json_pp || return 1
+	echo "#-----------------------------"
+	curl -sX GET http://${HOST}:1324/milkyway/mrtt -H 'Content-Type: application/json' -d '{ "multihost": [{"host":"localhost"},{"host":"localhost"}]}' |json_pp || return 1
+	echo "#-----------------------------"
+
 	curl -sX GET http://${HOST}:1324/milkyway/clean | json_pp || return 1
 	echo "#-----------------------------"
 
-}
+	
 
-full_test
