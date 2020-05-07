@@ -198,7 +198,7 @@ func RestGetClean(c echo.Context) error {
 	return c.JSON(http.StatusOK, &content)
 }
 
-func RestGetCPU(c echo.Context) error {
+func RestGetCPUM(c echo.Context) error {
 
 	if(checkInit() != nil){
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
@@ -207,11 +207,13 @@ func RestGetCPU(c echo.Context) error {
 
 	content := benchInfo{}
 
+	cores := strconv.Itoa(GetNumCPU())
+
 	start := time.Now()
 
 	fmt.Println("===============================================")
 
-	cmdStr := "sysbench cpu --cpu-max-prime=10000 run"
+	cmdStr := "sysbench cpu --cpu-max-prime=100000 --threads=" + cores + " run"
 	result, err := SysCall(cmdStr)
 
 	elapsed := time.Since(start)
@@ -221,7 +223,9 @@ func RestGetCPU(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
-	var grepStr = regexp.MustCompile(`execution time \(avg/stddev\):(\s+[+-]?([0-9]*[.])?[0-9]+)/`)
+	var grepStr = regexp.MustCompile(`events per second:(\s+[+-]?([0-9]*[.])?[0-9]+)`)
+	//for excution time:`execution time \(avg/stddev\):(\s+[+-]?([0-9]*[.])?[0-9]+)/`
+	
 	parseStr := grepStr.FindStringSubmatch(result)	
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
@@ -233,14 +237,63 @@ func RestGetCPU(c echo.Context) error {
 	content.Result = result
 	content.Elapsed = elapsedStr 
 
-	content.Desc = "Verify prime numbers in 10000 (standard division of each number by all numbers between 2 and the square root of the number)"
-	content.Unit = "sec"
+	content.Desc = "Repeat the calculation (excution) for prime numbers in 100000 using " + cores + "cores"
+	content.Unit = "Executions/sec"
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
 
 	return c.JSON(http.StatusOK, &content)
 }
+
+func RestGetCPUS(c echo.Context) error {
+
+	if(checkInit() != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	content := benchInfo{}
+
+	cores := strconv.Itoa(1)
+
+	start := time.Now()
+
+	fmt.Println("===============================================")
+
+	cmdStr := "sysbench cpu --cpu-max-prime=100000 --threads=" + cores + " run"
+	result, err := SysCall(cmdStr)
+
+	elapsed := time.Since(start)
+	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+	if(err != nil){
+		mapA := map[string]string{"message": "Error in excuting the benchmark: CPU"}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+
+	var grepStr = regexp.MustCompile(`events per second:(\s+[+-]?([0-9]*[.])?[0-9]+)`)
+	//for excution time:`execution time \(avg/stddev\):(\s+[+-]?([0-9]*[.])?[0-9]+)/`
+	
+	parseStr := grepStr.FindStringSubmatch(result)	
+	if len(parseStr) > 0 {
+		parseStr1 := strings.TrimSpace(parseStr[1])
+		fmt.Printf("execution time: %s\n", parseStr1)
+
+		result = parseStr1
+	}
+	
+	content.Result = result
+	content.Elapsed = elapsedStr 
+
+	content.Desc = "Repeat the calculation (excution) for prime numbers in 100000 using " + cores + "cores"
+	content.Unit = "Executions/sec"
+
+	PrintJsonPretty(content)
+	fmt.Println("===============================================")
+
+	return c.JSON(http.StatusOK, &content)
+}
+
 
 func RestGetMEMR(c echo.Context) error {
 
