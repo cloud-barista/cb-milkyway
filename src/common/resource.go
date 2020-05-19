@@ -19,6 +19,7 @@ type benchInfo struct {
 	Unit string `json:"unit"`
 	Desc string `json:"desc"`
 	Elapsed string `json:"elapsed"`
+	SpecId string `json:"specid"`
 }
 
 type multiInfo struct {
@@ -27,6 +28,7 @@ type multiInfo struct {
 
 type request struct {
 	Host string `json:"host"`
+	Spec string `json:"spec"`
 }
 
 type mRequest struct {
@@ -657,6 +659,7 @@ func RestGetMultiRTT(c echo.Context) error {
 		content.Elapsed = elapsedStr 
 		content.Desc = "Average RTT to " + pingHost
 		content.Unit = "ms"
+		content.SpecId = v.Spec
 
 		contentArray.ResultArray = append(contentArray.ResultArray, content)
 	
