@@ -7,6 +7,9 @@ echo "[CB-Milkyway: Install sysbench]"
 sudo apt-get -y update
 sudo apt-get -y install sysbench
 
+echo "[CB-Milkyway: Install Ping]"
+sudo apt-get -y install iputils-ping
+
 echo "[CB-Milkyway: Install debconf-utils]"
 sudo apt-get -y install debconf-utils
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password psetri1234ak'
