@@ -1,7 +1,22 @@
-# CB-Milkyway (CB-Tumblebug Benchmark Agent)
+# cb-milkyway (CB-Tumblebug Benchmark Agent)
 
 ## 개요
-CB-Tumblebug의 최적 멀티 클라우드 인프라 배치 기능을 위한, 벤치마크 에이전트
+CB-Tumblebug의 최적 멀티 클라우드 인프라 배치 기능을 위한, 벤치마크 에이전트 (PoC)
+
+(CB-Tumblebug: https://github.com/cloud-barista/cb-tumblebug)
+
+```
+[NOTE]
+cb-milkyway is currently under development as a PoC. (the latest version is 0.2 cappuccino)
+So, we do not recommend using the current release in production.
+Please note that the functionalities of cb-milkyway are not stable and secure yet.
+If you have any difficulties in using cb-milkyway, please let us know.
+(Open an issue or Join the cloud-barista Slack)
+```
+
+- Sysbench (https://github.com/akopytov/sysbench) 를 활용하여 컴퓨팅 관련 성능 측정
+- Ping 을 활용하여 네트워크 지연 성능 측정
+- Ubuntu 18.04에서만 동작 테스트 완료
 
 ## 사용 방법
 
