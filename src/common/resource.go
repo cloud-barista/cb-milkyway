@@ -4,22 +4,23 @@ import (
 	//"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
-	"strconv"
-	"github.com/labstack/echo"
 	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/labstack/echo"
 	//for ping
 	//"github.com/sparrc/go-ping"
-	
 )
 
 type benchInfo struct {
-	Result string `json:"result"`
-	Unit string `json:"unit"`
-	Desc string `json:"desc"`
+	Result  string `json:"result"`
+	Unit    string `json:"unit"`
+	Desc    string `json:"desc"`
 	Elapsed string `json:"elapsed"`
-	SpecId string `json:"specid"`
+	SpecId  string `json:"specid"`
 }
 
 type multiInfo struct {
@@ -35,9 +36,7 @@ type mRequest struct {
 	Multihost []request `json:"multihost"`
 }
 
-
 func RestGetInstall(c echo.Context) error {
-
 
 	content := benchInfo{}
 
@@ -48,7 +47,7 @@ func RestGetInstall(c echo.Context) error {
 	// wget install script from github install.sh
 	cmdStr := "wget https://github.com/cloud-barista/cb-milkyway/raw/master/src/script/install.sh -P ~/script/"
 	result, err := SysCall(cmdStr)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in installation: wget script " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -56,7 +55,7 @@ func RestGetInstall(c echo.Context) error {
 	// change chmod
 	cmdStr = "sudo chmod 755 ~/script/install.sh"
 	result2, err := SysCall(cmdStr)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in installation: chmod " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -64,11 +63,11 @@ func RestGetInstall(c echo.Context) error {
 	// run script
 	cmdStr = "~/script/install.sh"
 	result3, err := SysCall(cmdStr)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in installation: chmod " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
-	
+
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 
@@ -78,7 +77,7 @@ func RestGetInstall(c echo.Context) error {
 	result = "The installation is complete"
 
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	PrintJsonPretty(content)
 	fmt.Println("===============================================")
@@ -88,7 +87,7 @@ func RestGetInstall(c echo.Context) error {
 
 func RestGetInit(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -102,13 +101,13 @@ func RestGetInit(c echo.Context) error {
 	// Init fileio
 	cmdStr := "sysbench fileio --file-total-size=50M prepare"
 	outputStr, err := SysCall(cmdStr)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: Init fileio " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(`([0-9]+) files, ([0-9]+)([a-zA-Z]+) each, ([0-9]+)([a-zA-Z]+) total`)
-	parseStr := grepStr.FindStringSubmatch(outputStr)	
+	parseStr := grepStr.FindStringSubmatch(outputStr)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[0])
 		fmt.Printf("File creation result: %s\n", parseStr1)
@@ -119,31 +118,30 @@ func RestGetInit(c echo.Context) error {
 	// Init DB
 	cmdStr = "sysbench /usr/share/sysbench/oltp_read_write.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak prepare"
 	outputStr2, err := SysCall(cmdStr)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: Init DB " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	grepStr = regexp.MustCompile(` ([0-9]+) records into .([a-zA-Z]+).`)
-	parseStr = grepStr.FindStringSubmatch(outputStr2)	
+	parseStr = grepStr.FindStringSubmatch(outputStr2)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[0])
 		fmt.Printf("Table creation result: %s\n", parseStr1)
 
 		outputStr2 = parseStr1
 	}
-	
+
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 
 	outputStr += ", "
 	outputStr += outputStr2
 
-
 	//result = "The init is complete: "
 
 	content.Result = "The init is complete"
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = outputStr + " are created"
 
@@ -155,7 +153,7 @@ func RestGetInit(c echo.Context) error {
 
 func RestGetClean(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -169,7 +167,7 @@ func RestGetClean(c echo.Context) error {
 	// Clean fileio
 	cmdStr := "sysbench fileio --file-total-size=50M cleanup"
 	result, err := SysCall(cmdStr)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: Clean fileio " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -177,11 +175,11 @@ func RestGetClean(c echo.Context) error {
 	// Clean DB
 	cmdStr = "sysbench /usr/share/sysbench/oltp_read_write.lua --db-driver=mysql --table-size=100000 --mysql-db=sysbench --mysql-user=sysbench --mysql-password=psetri1234ak cleanup"
 	result2, err := SysCall(cmdStr)
-	if(err != nil){
-		mapA := map[string]string{"message": "Error in excuting the benchmark: Clean DB "  + err.Error()}
+	if err != nil {
+		mapA := map[string]string{"message": "Error in excuting the benchmark: Clean DB " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
-	
+
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 
@@ -190,7 +188,7 @@ func RestGetClean(c echo.Context) error {
 	result = "The cleaning is complete"
 
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "The benchmark files and tables are removed"
 
@@ -202,7 +200,7 @@ func RestGetClean(c echo.Context) error {
 
 func RestGetCPUM(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -220,24 +218,24 @@ func RestGetCPUM(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: CPU"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(`events per second:(\s+[+-]?([0-9]*[.])?[0-9]+)`)
 	//for excution time:`execution time \(avg/stddev\):(\s+[+-]?([0-9]*[.])?[0-9]+)/`
-	
-	parseStr := grepStr.FindStringSubmatch(result)	
+
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
 		fmt.Printf("execution time: %s\n", parseStr1)
 
 		result = parseStr1
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Repeat the calculation (excution) for prime numbers in 100000 using " + cores + "cores"
 	content.Unit = "Executions/sec"
@@ -250,7 +248,7 @@ func RestGetCPUM(c echo.Context) error {
 
 func RestGetCPUS(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -268,24 +266,24 @@ func RestGetCPUS(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: CPU"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(`events per second:(\s+[+-]?([0-9]*[.])?[0-9]+)`)
 	//for excution time:`execution time \(avg/stddev\):(\s+[+-]?([0-9]*[.])?[0-9]+)/`
-	
-	parseStr := grepStr.FindStringSubmatch(result)	
+
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
 		fmt.Printf("execution time: %s\n", parseStr1)
 
 		result = parseStr1
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Repeat the calculation (excution) for prime numbers in 100000 using " + cores + "cores"
 	content.Unit = "Executions/sec"
@@ -296,10 +294,9 @@ func RestGetCPUS(c echo.Context) error {
 	return c.JSON(http.StatusOK, &content)
 }
 
-
 func RestGetMEMR(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -315,22 +312,22 @@ func RestGetMEMR(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: MEMR"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(` transferred .([+-]?([0-9]*[.])?[0-9]+) `)
-	parseStr := grepStr.FindStringSubmatch(result)	
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
 		fmt.Printf("execution time: %s\n", parseStr1)
 
 		result = parseStr1
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Allocate 10G memory buffer and read (repeat reading a pointer)"
 	content.Unit = "MiB/sec"
@@ -343,7 +340,7 @@ func RestGetMEMR(c echo.Context) error {
 
 func RestGetMEMW(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -359,22 +356,22 @@ func RestGetMEMW(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: MEMW"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(` transferred .([+-]?([0-9]*[.])?[0-9]+) `)
-	parseStr := grepStr.FindStringSubmatch(result)	
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
 		fmt.Printf("execution time: %s\n", parseStr1)
 
 		result = parseStr1
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Allocate 10G memory buffer and write (repeat writing a pointer)"
 	content.Unit = "MiB/sec"
@@ -387,7 +384,7 @@ func RestGetMEMW(c echo.Context) error {
 
 func RestGetFIOR(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -403,22 +400,22 @@ func RestGetFIOR(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: FIOR"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(`read, MiB/s:(\s+[+-]?([0-9]*[.])?[0-9]+)`)
-	parseStr := grepStr.FindStringSubmatch(result)	
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
 		fmt.Printf("Throughput read, MiB/s: %s\n", parseStr1)
 
 		result = parseStr1
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Check read throughput by excuting random reads for files in 50MiB for 30s"
 	content.Unit = "MiB/sec"
@@ -431,7 +428,7 @@ func RestGetFIOR(c echo.Context) error {
 
 func RestGetFIOW(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -447,22 +444,22 @@ func RestGetFIOW(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: FIOW"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(`written, MiB/s:(\s+[+-]?([0-9]*[.])?[0-9]+)`)
-	parseStr := grepStr.FindStringSubmatch(result)	
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
 		parseStr1 := strings.TrimSpace(parseStr[1])
 		fmt.Printf("Throughput write, MiB/s: %s\n", parseStr1)
 
 		result = parseStr1
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Check write throughput by excuting random writes for files in 50MiB for 30s"
 	content.Unit = "MiB/sec"
@@ -475,7 +472,7 @@ func RestGetFIOW(c echo.Context) error {
 
 func RestGetDBR(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -491,23 +488,23 @@ func RestGetDBR(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: DBR"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(`transactions:(\s+([0-9]*)(\s+)\([+-]?([0-9]*[.])?[0-9]+)`)
-	parseStr := grepStr.FindStringSubmatch(result)	
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
-		
+
 		parseStr1 := strings.Split(parseStr[1], "(")
 		fmt.Printf("DB Read Transactions/s: %s\n", parseStr1[1])
 
 		result = parseStr1[1]
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Read transactions by simulating transaction loads (OLTP) in DB for 100000 records"
 	content.Unit = "Transactions/s"
@@ -520,7 +517,7 @@ func RestGetDBR(c echo.Context) error {
 
 func RestGetDBW(c echo.Context) error {
 
-	if(checkInit() != nil){
+	if checkInit() != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: not initialized"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -536,23 +533,23 @@ func RestGetDBW(c echo.Context) error {
 
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: DBW"}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
 	var grepStr = regexp.MustCompile(`transactions:(\s+([0-9]*)(\s+)\([+-]?([0-9]*[.])?[0-9]+)`)
-	parseStr := grepStr.FindStringSubmatch(result)	
+	parseStr := grepStr.FindStringSubmatch(result)
 	if len(parseStr) > 0 {
-		
+
 		parseStr1 := strings.Split(parseStr[1], "(")
 		fmt.Printf("DB Write Transactions/s: %s\n", parseStr1[1])
 
 		result = parseStr1[1]
 	}
-	
+
 	content.Result = result
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 
 	content.Desc = "Write transactions by simulating transaction loads (OLTP) in DB for 100000 records"
 	content.Unit = "Transactions/s"
@@ -562,7 +559,6 @@ func RestGetDBW(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, &content)
 }
-
 
 func RestGetRTT(c echo.Context) error {
 
@@ -580,11 +576,11 @@ func RestGetRTT(c echo.Context) error {
 	}
 
 	pingHost := req.Host
-	
+
 	// system call for ping
 	cmdStr := "ping -c 10 " + pingHost
 	outputStr, err := SysCall(cmdStr)
-	if(err != nil){
+	if err != nil {
 		mapA := map[string]string{"message": "Error in excuting the benchmark: Ping " + err.Error()}
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
@@ -598,13 +594,11 @@ func RestGetRTT(c echo.Context) error {
 		outputStr = vals[2]
 	}
 
-	
 	elapsed := time.Since(start)
 	elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
 
-	
 	content.Result = outputStr
-	content.Elapsed = elapsedStr 
+	content.Elapsed = elapsedStr
 	content.Desc = "Average RTT to " + pingHost
 	content.Unit = "ms"
 
@@ -621,8 +615,6 @@ func RestGetMultiRTT(c echo.Context) error {
 
 	mReq := mRequest{}
 
-	start := time.Now()
-
 	fmt.Println("===============================================")
 
 	if err := c.Bind(&mReq); err != nil {
@@ -630,41 +622,57 @@ func RestGetMultiRTT(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, &mapA)
 	}
 
+	var wg sync.WaitGroup
+	chanResults := make(chan benchInfo)
+
 	hostList := mReq.Multihost
-	for _, v := range hostList {
-		content := benchInfo{}
+	for _, srcHost := range hostList {
+		wg.Add(1)
+		go func(srcHost request, chanResults chan benchInfo) {
+			defer wg.Done()
+			start := time.Now()
+			content := benchInfo{}
 
-		pingHost := v.Host
-		// system call for ping
-		cmdStr := "ping -c 10 " + pingHost
-		outputStr, err := SysCall(cmdStr)
-		if(err != nil){
-			mapA := map[string]string{"message": "Error in excuting the benchmark: Ping " + err.Error()}
-			return c.JSON(http.StatusNotFound, &mapA)
-		}
-	
-		var grepStr = regexp.MustCompile(`(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)`)
-		parseStr := grepStr.FindAllStringSubmatch(outputStr, -1)
-		if len(parseStr) > 0 {
-			vals := parseStr[0]
-			fmt.Printf("Ping result: %s\n", vals[1])
-	
-			outputStr = vals[2]
-		}
+			// system call for ping
+			cmdStr := "ping -c 10 " + srcHost.Host
+			outputStr, err := SysCall(cmdStr)
+			if err != nil {
+				//mapA := map[string]string{"message": "Error in excuting the benchmark: Ping " + err.Error()}
+				outputStr = ""
+			}
 
-		elapsed := time.Since(start)
-		elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+			var grepStr = regexp.MustCompile(`(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)`)
+			parseStr := grepStr.FindAllStringSubmatch(outputStr, -1)
+			if len(parseStr) > 0 {
+				vals := parseStr[0]
+				fmt.Printf("Ping result: %s\n", vals[1])
 
-		content.Result = outputStr
-		content.Elapsed = elapsedStr 
-		content.Desc = "Average RTT to " + pingHost
-		content.Unit = "ms"
-		content.SpecId = v.Spec
+				outputStr = vals[2]
+			}
 
-		contentArray.ResultArray = append(contentArray.ResultArray, content)
-	
+			elapsed := time.Since(start)
+			elapsedStr := strconv.FormatFloat(elapsed.Seconds(), 'f', 6, 64)
+
+			content.Result = outputStr
+			content.Elapsed = elapsedStr
+			content.Desc = "Average RTT to " + srcHost.Host
+			content.Unit = "ms"
+			content.SpecId = srcHost.Spec
+
+			chanResults <- content
+
+		}(srcHost, chanResults)
 	}
 
+	go func() {
+		wg.Wait()
+		close(chanResults)
+	}()
+
+	// Collect the results
+	for content := range chanResults {
+		contentArray.ResultArray = append(contentArray.ResultArray, content)
+	}
 
 	PrintJsonPretty(contentArray)
 	fmt.Println("===============================================")
@@ -674,14 +682,12 @@ func RestGetMultiRTT(c echo.Context) error {
 
 func checkInit() error {
 	checkPath, err := SysLookPath("sysbench")
-	if(err != nil){
+	if err != nil {
 		return err
 	}
 	fmt.Printf("checkPath: %s\n", checkPath)
 	return nil
 }
-
-
 
 func ApiValidation() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -689,12 +695,12 @@ func ApiValidation() echo.MiddlewareFunc {
 			fmt.Printf("%v\n", "[API request!]")
 
 			/*
-			checkPath, err := SysLookPath("sysbench")
-			mapA := map[string]string{"message": "Error in excuting the benchmark: no sysbench"}	
-			if(err != nil){
-				return echo.NewHTTPError(http.StatusNotFound, &mapA)
-			}
-			fmt.Printf("checkPath: %s\n", checkPath)
+				checkPath, err := SysLookPath("sysbench")
+				mapA := map[string]string{"message": "Error in excuting the benchmark: no sysbench"}
+				if(err != nil){
+					return echo.NewHTTPError(http.StatusNotFound, &mapA)
+				}
+				fmt.Printf("checkPath: %s\n", checkPath)
 			*/
 
 			return next(c)

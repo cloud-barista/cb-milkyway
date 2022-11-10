@@ -45,7 +45,6 @@ const (
 )
 
 const (
-	Version = " Version: Cappuccino"
 	website = " Repository: https://github.com/cloud-barista/cb-milkyway"
 	banner  = `
 
@@ -86,8 +85,6 @@ func ApiServer() {
 	fmt.Println("")
 	fmt.Printf(banner)
 	fmt.Println("")
-	fmt.Printf(ErrorColor, Version)
-	fmt.Println("")
 	fmt.Printf(InfoColor, website)
 	fmt.Println("")
 	fmt.Println("")
@@ -113,22 +110,20 @@ func ApiServer() {
 
 	g.GET("/rtt", common.RestGetRTT)
 	g.GET("/mrtt", common.RestGetMultiRTT)
-	
+
 	//g.PUT("/:nsId", common.RestPutNs)
 	//g.DELETE("/:nsId", common.RestDelNs)
 	//g.DELETE("", common.RestDelAllNs)
 
 	/*
-	g.POST("", common.RestPostNs)
-	g.GET("/:nsId", common.RestGetNs)
-	g.GET("", common.RestGetAllNs)
-	g.PUT("/:nsId", common.RestPutNs)
-	g.DELETE("/:nsId", common.RestDelNs)
-	g.DELETE("", common.RestDelAllNs)
+		g.POST("", common.RestPostNs)
+		g.GET("/:nsId", common.RestGetNs)
+		g.GET("", common.RestGetAllNs)
+		g.PUT("/:nsId", common.RestPutNs)
+		g.DELETE("/:nsId", common.RestDelNs)
+		g.DELETE("", common.RestDelAllNs)
 	*/
 
 	e.Logger.Fatal(e.Start(":1324"))
 
 }
-
-var SPIDER_URL string
