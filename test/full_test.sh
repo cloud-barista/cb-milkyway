@@ -38,7 +38,7 @@ CMD=${2-""}
 
 	curl -sX GET http://${HOST}:1324/milkyway/rtt -H 'Content-Type: application/json' -d '{ "host": "localhost"}' |json_pp || return 1
 	echo "#-----------------------------"
-	curl -sX GET http://${HOST}:1324/milkyway/mrtt -H 'Content-Type: application/json' -d '{ "multihost": [{"host":"localhost", "spec":"spec1"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"}]}' |json_pp || return 1
+	curl -sX GET http://${HOST}:1324/milkyway/mrtt -H 'Content-Type: application/json' -d '{ "multihost": [{"host":"wrong", "spec":"spec1"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"},{"host":"localhost", "spec":"spec2"}]}' |json_pp || return 1
 	echo "#-----------------------------"
 
 	curl -sX GET http://${HOST}:1324/milkyway/clean | json_pp || return 1

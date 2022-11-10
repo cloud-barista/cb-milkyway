@@ -638,7 +638,12 @@ func RestGetMultiRTT(c echo.Context) error {
 			outputStr, err := SysCall(cmdStr)
 			if err != nil {
 				//mapA := map[string]string{"message": "Error in excuting the benchmark: Ping " + err.Error()}
-				outputStr = ""
+
+				//retry once
+				outputStr, err = SysCall(cmdStr)
+				if err != nil {
+					outputStr = ""
+				}
 			}
 
 			var grepStr = regexp.MustCompile(`(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)`)
